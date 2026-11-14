@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Launch Radar — token-less protocols ranked by expected launch value</title>
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.35"/>
+        <circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.5"/>
+        <path d="M12 12 L20 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="15.5" cy="14.5" r="1.8" fill="currentColor"/>
+        <circle cx="12" cy="12" r="1.2" fill="currentColor"/>
+      </svg>
+      <div>
+        <h1>Launch Radar</h1>
+        <p class="tagline">Token-less protocols ranked by expected launch value, with a farm plan for each</p>
+      </div>
+    </div>
+    <div class="top-stats" id="topStats"></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="exec" id="execCard" aria-label="Top opportunity">
+    <div class="exec-label">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M13 2 4.5 13.5H11L9.5 22 19 9.5h-6.5L13 2Z" fill="currentColor"/></svg>
+      Best opportunity right now
+    </div>
+    <div id="execBody" class="exec-body"></div>
+  </section>
+
+  <section class="controls" id="controls" aria-label="Filters">
+    <div class="control grow">
+      <label for="q">Search</label>
+      <div class="search">
+        <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="m15.5 15.5 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="q" type="search" placeholder="protocol, category, chain…" autocomplete="off">
+      </div>
+    </div>
+    <div class="control"><label for="fCat">Category</label><select id="fCat"><option value="">All categories</option></select></div>
+    <div class="control"><label for="fChain">Chain</label><select id="fChain"><option value="">All chains</option></select></div>
+    <div class="control"><label for="fTvl">Min TVL</label>
+      <select id="fTvl">
+        <option value="0">Any</option>
+        <option value="50000000">$50M</option>
+        <option value="100000000">$100M</option>
+        <option value="500000000">$500M</option>
+        <option value="1000000000">$1B</option>
+      </select>
+    </div>
+    <div class="control check"><label><input type="checkbox" id="fWatch"> Watchlist only</label></div>
+    <div class="control"><label for="fSort">Sort</label>
+      <select id="fSort">
+        <option value="rank">Rank (implied value)</option>
+        <option value="tvl">TVL</option>
+        <option value="change">7-day change</option>
+        <option value="age">Age without token</option>
+        <option value="odds">Launch odds</option>
+        <option value="score">Score</option>
+        <option value="name">Name A-Z</option>
+      </select>
+    </div>
+    <div class="control"><button type="button" id="fReset" class="ghost">Reset</button></div>
+  </section>
+
+  <p class="count" id="countLine" role="status"></p>
+
+  <nav class="tabs" aria-label="Views">
+    <button type="button" class="tab active" data-view="board">Ranked board</button>
+    <button type="button" class="tab" data-view="duel">Head-to-head</button>
+    <button type="button" class="tab" data-view="aside">Set aside</button>
+  </nav>
+
+  <section class="panel" id="viewBoard">
+    <div class="table-scroll">
+      <table class="board" id="boardTable">
+        <thead>
+          <tr>
+            <th data-key="rank" class="num">#</th>
+            <th data-key="name">Protocol</th>
+            <th data-key="tvl" class="num">TVL</th>
+            <th data-key="change" class="num">7D</th>
+            <th data-key="age" class="num">No token for</th>
+            <th data-key="odds" class="num">Odds</th>
+            <th data-key="iv" class="num">Implied value</th>
+            <th data-key="score" class="num">Score</th>
+            <th class="num">Ticket</th>
+            <th class="plan-col">Farm plan</th>
+          </tr>
+        </thead>
+        <tbody id="boardBody"></tbody>
+      </table>
+    </div>
+    <p class="table-foot" id="boardFoot"></p>
+  </section>
+
+  <section class="panel hidden" id="viewDuel">
+    <h2>Top 10, head-to-head</h2>
+    <p class="muted-note">The same figures side by side, so the ranking can be checked at a glance.</p>
+    <div class="table-scroll"><table class="duel" id="duelTable"></table></div>
+  </section>
+
+  <section class="panel hidden" id="viewAside">
+    <h2>Set aside — token-less, but not launching their own</h2>
+    <p class="muted-note">These record no token, but they are the kinds of product the house watchlist rule leaves out: exchange venues, bridge infrastructure, wrapped or staked wrappers, and versioned successors of protocols whose token already trades. They get no implied value here. The watchlist is the floor, not the ceiling, so the ranked board may still hold protocols it does not name.</p>
+    <div class="table-scroll"><table class="aside" id="asideTable"></table></div>
+  </section>
+
+  <section class="panel method" id="methodology">
+    <h2>How the board is built</h2>
+    <p>Every protocol in the sealed snapshot is scored by one model, <code>dashboard/engine.js</code>, the same code that produced <code>board.json</code>:</p>
+    <p class="formula">fair value = TVL × comparable multiple × momentum × tenure<br>
+       implied value = fair value × launch odds</p>
+    <p>The <strong>comparable multiple</strong> is the median market-cap-to-TVL ratio of the tokened protocols in the same category (the global median covers thin categories). <strong>Momentum</strong> uses the 7-day TVL change, bounded; <strong>tenure</strong> rewards months already spent live without a token. The <strong>launch odds</strong> blend size, tenure, traction and the category's launch climate, measured on this snapshot; watchlisted protocols start from a higher odds base, staking-family categories from a lower one. <strong>Farm plans</strong> are chosen by category text and sized by the model's ticket economics; expected farmer value fades steeply with ticket size against TVL, calibrated so a $100 ticket on a $8M protocol and a $1,100 ticket on a $2.75B one each expect a few hundred dollars.</p>
+    <p class="disclaimer">Implied values are this entry's own model output on the sealed DefiLlama snapshot — a ranking aid, never a prediction that a token will come, and never a claim make.fun makes. Nothing here is financial advice.</p>
+  </section>
+
+  <footer class="foot">
+    <span id="footNote"></span>
+  </footer>
+</main>
+
+<div class="modal-back hidden" id="modalBack">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Protocol detail">
+    <button type="button" class="modal-x" id="modalClose" aria-label="Close detail">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="m5 5 14 14M19 5 5 19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
+<script src="../data.js"></script>
+<script src="engine.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

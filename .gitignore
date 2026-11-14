@@ -1,0 +1,11 @@
+/*
+!/main.ts
+!/dashboard/
+!/screenshots/
+!/vendor/
+!/LICENSE
+!/README.md
+!/.gitignore
+!/.makefun/
+.makefun/*
+!/.makefun/owner.json
